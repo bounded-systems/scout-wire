@@ -1,0 +1,45 @@
+.github/workflows/ci.yml
+  s_d0a1bec15809bc::t_88c60e5006c62e 1-23
+.github/workflows/publish-jsr.yml
+  s_d0a1bec15809bc::t_36932c3ee9d845 1-16
+.gitignore
+  s_d0a1bec15809bc::t_91a6aa4e644437 1-2
+LICENSE
+  s_d0a1bec15809bc::t_299bf5ffb2ad22 1-131
+README.md
+  s_70508ca017cb29::t_067109f5e330ee 1-19
+deno.json
+  s_d0a1bec15809bc::t_3b7fce6bc16173 1-19
+deno.lock
+  s_70508ca017cb29::t_23b54adcfa4857 1-26
+gen.ts
+  s_d0a1bec15809bc::t_f0a94fae202537 1-25
+manifest.json
+  s_70508ca017cb29::t_77ed96d45eae03 1-38
+mod.ts
+  s_70508ca017cb29::t_d0c691ed529849 1-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "79bedb301ab4b2d19ce97cdfbc5122c964dc9913",
+  "prompts": {},
+  "sessions": {
+    "s_70508ca017cb29": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d283f13f-34c8-429b-8cb1-b020e645c0e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    },
+    "s_d0a1bec15809bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "297d0fee-c144-4ae1-8a97-9d7922657403",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
