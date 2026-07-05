@@ -5,6 +5,7 @@
     "repo",
     "pr",
     "issue",
+    "project",
     "fetch",
     "download"
   ],
@@ -24,6 +25,12 @@
       "repo",
       "number",
       "comments"
+    ],
+    "project": [
+      "org",
+      "number",
+      "first",
+      "after"
     ],
     "fetch": [
       "url",

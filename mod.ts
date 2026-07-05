@@ -120,6 +120,45 @@ const download: VerbSpec<typeof DownloadInput, typeof DownloadOutput> =
     run: () => ({ url: "", size: 0, contentType: null, sha256: "", data: "" }),
   });
 
+const ProjectInput = z.object({
+  org: z.string(),
+  number: z.number(),
+  first: z.number().optional(),
+  after: z.string().optional(),
+});
+const ProjectItemOutput = z.object({
+  number: z.number(),
+  title: z.string(),
+  url: z.string(),
+  repo: z.string(),
+  contentType: z.enum(["Issue", "PullRequest"]),
+  state: z.string(),
+  fields: z.record(z.string(), z.union([z.string(), z.number()])),
+});
+const ProjectOutput = z.object({
+  title: z.string(),
+  items: z.array(ProjectItemOutput),
+  pageInfo: z.object({
+    hasNextPage: z.boolean(),
+    endCursor: z.string().nullable(),
+  }),
+});
+const project: VerbSpec<typeof ProjectInput, typeof ProjectOutput> = defineVerb(
+  {
+    id: "project",
+    summary:
+      "Fetch a GitHub Projects v2 board's items via scoutd (read-only; GraphQL).",
+    actor: "scout",
+    input: ProjectInput,
+    output: ProjectOutput,
+    run: () => ({
+      title: "",
+      items: [],
+      pageInfo: { hasNextPage: false, endCursor: null },
+    }),
+  },
+);
+
 const StatusInput = z.object({});
 const StatusOutput = z.object({
   version: z.string(),
@@ -142,6 +181,7 @@ export const SCOUT_WIRE: Record<string, VerbSpec> = {
   "repo": repo,
   "pr": pr,
   "issue": issue,
+  "project": project,
   "fetch": fetchUrl,
   "download": download,
 };
