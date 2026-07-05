@@ -1,0 +1,24 @@
+deno.json
+  s_d29d2cf4f90689::t_106cbc1cb9b5c3 3
+mod.ts
+  s_d29d2cf4f90689::t_42c4c3e49c09fd 123-155
+  s_d29d2cf4f90689::t_008d16f1df9227 156-161,184
+manifest.json
+  s_d29d2cf4f90689::t_ead1c574e0a001 8,29-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "e83c12f275c694a876ecfb2f8f1015a924e8fcc2",
+  "prompts": {},
+  "sessions": {
+    "s_d29d2cf4f90689": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "86eac30a-2a2d-4a49-9739-5c67147528f5",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Robert DeLanghe <1240090+bdelanghe@users.noreply.github.com>"
+    }
+  }
+}
