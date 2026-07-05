@@ -1,25 +1,20 @@
 /**
  * @module
- * Project the scout-wire VerbSpec (mod.ts — the pinned agreement) to a
- * dependency-free manifest.json that trellis's offline conformance check reads.
- * Regenerated from the spec, never hand-edited.
+ * Project the scout-wire VerbSpec (mod.ts) to the dependency-free manifest.json
+ * trellis's offline check reads — via the ONE canonical projectVerbSpec from
+ * @bounded-systems/trellis-kit (0.3.0 accepts a VerbSpec registry directly).
  *
  *   deno run --allow-read --allow-write gen.ts
  */
 
+import { projectVerbSpec } from "@bounded-systems/trellis-kit";
 import { SCOUT_WIRE } from "./mod.ts";
 
-const methods = Object.keys(SCOUT_WIRE);
-const params: Record<string, string[]> = {};
-for (const [id, verb] of Object.entries(SCOUT_WIRE)) {
-  const shape = (verb.input as { shape?: Record<string, unknown> }).shape;
-  params[id] = shape ? Object.keys(shape) : [];
-}
 if (import.meta.main) {
   const out = new URL("./manifest.json", import.meta.url).pathname;
   await Deno.writeTextFile(
     out,
-    JSON.stringify({ type: "scout-wire", methods, params }, null, 2) + "\n",
+    JSON.stringify(projectVerbSpec("scout-wire", SCOUT_WIRE), null, 2) + "\n",
   );
   console.log(`wrote ${out}`);
 }
