@@ -11,8 +11,9 @@ violation the [trellis](https://github.com/bounded-systems/trellis) lattice chec
 flags.
 
 - **`mod.ts`** — the agreement, as [`@bounded-systems/verbspec`](https://github.com/bounded-systems/verbspec)
-  verbs: scoutd's 6 methods (`repo`, `pr`, `issue`, `fetch`, `download`,
-  `status`).
+  verbs: scoutd's methods — `status`; single-target reads `repo`, `pr`, `issue`,
+  `fetch`, `download`; and org/board reads `repos`, `project`, `orgOpenWork`,
+  `orgMergedPrs`.
 - **`manifest.json`** — the dependency-free projection (`deno task gen`) trellis
   reads for its offline conformance check.
 

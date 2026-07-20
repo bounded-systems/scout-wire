@@ -3,9 +3,12 @@
   "methods": [
     "status",
     "repo",
+    "repos",
     "pr",
     "issue",
     "project",
+    "orgOpenWork",
+    "orgMergedPrs",
     "fetch",
     "download"
   ],
@@ -14,6 +17,10 @@
     "repo": [
       "url",
       "ref"
+    ],
+    "repos": [
+      "org",
+      "includePrivate"
     ],
     "pr": [
       "repo",
@@ -31,6 +38,12 @@
       "number",
       "first",
       "after"
+    ],
+    "orgOpenWork": [
+      "org"
+    ],
+    "orgMergedPrs": [
+      "org"
     ],
     "fetch": [
       "url",

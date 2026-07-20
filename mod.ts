@@ -132,7 +132,17 @@ const ProjectItemOutput = z.object({
   url: z.string(),
   repo: z.string(),
   contentType: z.enum(["Issue", "PullRequest"]),
-  state: z.string(),
+  // Strict lifecycle state (was a free string) so a consumer can compare board
+  // Status against the item's real GitHub state.
+  state: z.enum(["OPEN", "CLOSED", "MERGED"]),
+  /** Underlying Issue/PR node id — lets a caller derive board membership. */
+  contentId: z.string(),
+  /** ProjectV2Item node id — the handle a write path would target. */
+  itemId: z.string(),
+  /** ISO 8601 creation timestamp — feeds age-based prioritization. */
+  createdAt: z.string(),
+  /** Visibility of the item's repo — public/private board contract. */
+  isPrivate: z.boolean(),
   fields: z.record(z.string(), z.union([z.string(), z.number()])),
 });
 const ProjectOutput = z.object({
@@ -175,13 +185,95 @@ const status: VerbSpec<typeof StatusInput, typeof StatusOutput> = defineVerb({
   run: () => ({ version: "", uptime: 0, hasToken: false, allowlist: [] }),
 });
 
+// Shared: one repo the daemon could not fully read, and why (partial reads never
+// abort the whole enumeration).
+const SkippedRepo = z.object({ repo: z.string(), reason: z.string() });
+
+const ReposInput = z.object({
+  org: z.string(),
+  includePrivate: z.boolean().default(false),
+});
+const ReposOutput = z.object({
+  repos: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      isPrivate: z.boolean(),
+    }),
+  ),
+});
+const repos: VerbSpec<typeof ReposInput, typeof ReposOutput> = defineVerb({
+  id: "repos",
+  summary: "List an org's repositories via scoutd (external read).",
+  actor: "scout",
+  input: ReposInput,
+  output: ReposOutput,
+  run: () => ({ repos: [] }),
+});
+
+const OrgOpenWorkInput = z.object({ org: z.string() });
+const OrgOpenWorkOutput = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      kind: z.enum(["Issue", "PullRequest"]),
+      repo: z.string(),
+      number: z.number(),
+      title: z.string(),
+      labels: z.array(z.string()),
+      hasSubIssues: z.boolean(),
+    }),
+  ),
+  skipped: z.array(SkippedRepo),
+});
+const orgOpenWork: VerbSpec<typeof OrgOpenWorkInput, typeof OrgOpenWorkOutput> =
+  defineVerb({
+    id: "orgOpenWork",
+    summary:
+      "Every open issue/PR across an org's repos via scoutd (partial: unreadable repos are skipped).",
+    actor: "scout",
+    input: OrgOpenWorkInput,
+    output: OrgOpenWorkOutput,
+    run: () => ({ items: [], skipped: [] }),
+  });
+
+const OrgMergedPrsInput = z.object({ org: z.string() });
+const OrgMergedPrsOutput = z.object({
+  items: z.array(
+    z.object({
+      repo: z.string(),
+      number: z.number(),
+      title: z.string(),
+      authorLogin: z.string().nullable(),
+      labels: z.array(z.string()),
+      closingIssueCount: z.number(),
+    }),
+  ),
+  skipped: z.array(SkippedRepo),
+});
+const orgMergedPrs: VerbSpec<
+  typeof OrgMergedPrsInput,
+  typeof OrgMergedPrsOutput
+> = defineVerb({
+  id: "orgMergedPrs",
+  summary:
+    "Every merged PR across an org's repos via scoutd (traceability; partial on unreadable repos).",
+  actor: "scout",
+  input: OrgMergedPrsInput,
+  output: OrgMergedPrsOutput,
+  run: () => ({ items: [], skipped: [] }),
+});
+
 /** The `scout-wire` method surface (keys are the canonical wire method strings). */
 export const SCOUT_WIRE: Record<string, VerbSpec> = {
   "status": status,
   "repo": repo,
+  "repos": repos,
   "pr": pr,
   "issue": issue,
   "project": project,
+  "orgOpenWork": orgOpenWork,
+  "orgMergedPrs": orgMergedPrs,
   "fetch": fetchUrl,
   "download": download,
 };
