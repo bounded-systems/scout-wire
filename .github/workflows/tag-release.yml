@@ -1,0 +1,52 @@
+name: tag release
+
+# When a release lands on main (version bumped by a merged `cut release` PR, tag
+# not yet cut), mint cuts the v<version> tag → publish-jsr.yml + release.yml.
+# Tag push only — never a branch push — so no branch-protection exception is
+# needed. A no-op on every other push (the current version is already tagged).
+#
+# NOTE: a tag pushed by the default GITHUB_TOKEN does NOT start new workflows
+# (GitHub loop-prevention), so publish-jsr won't fire. Set a RELEASE_TOKEN secret
+# (a GitHub App installation token or fine-grained PAT with contents:write) so the
+# tag push triggers publish; without it the tag is still cut and publish-jsr can
+# be re-run manually.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # push the tag
+
+concurrency:
+  group: tag-release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          repository: bounded-systems/mint
+          ref: v0.5.0
+          path: .mint
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+      - name: Install mint deps
+        working-directory: .mint
+        run: npm ci --no-audit --no-fund
+      - name: Cut the tag if this version is untagged
+        run: |
+          ver="$(node -e 'const fs=require("fs");for(const f of ["deno.json","jsr.json","package.json"]){try{console.log(JSON.parse(fs.readFileSync(f,"utf8")).version);break}catch(e){}}')"
+          if [ -z "$ver" ]; then echo "no version manifest"; exit 0; fi
+          if git rev-parse "v${ver}" >/dev/null 2>&1; then
+            echo "v${ver} already tagged — nothing to do"; exit 0
+          fi
+          git config user.name "mint"
+          git config user.email "noreply@anthropic.com"
+          node .mint/mint.mjs release # cuts + pushes v<version>

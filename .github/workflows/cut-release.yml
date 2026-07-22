@@ -1,64 +1,52 @@
 name: cut release
 
-# mint is the ONLY thing that cuts a release tag — never a hand-pushed tag.
-# Dispatch this (Actions UI) to run, entirely in CI:
-#   mint version → bump deno.json + prepend CHANGELOG + consume the .release/ intents
-#   commit the bump to main
-#   mint release → cut + PUSH the v<version> tag, which drives publish-jsr.yml
-#                  (JSR, keyless OIDC) + release.yml (in-toto provenance)
-#
-# No-op when there are no intents. REQUIRES: the workflow may push to `main`
-# (allow GitHub Actions in branch protection, or swap in a deploy/app token).
+# mint is the only thing that cuts a release — via a PR, never a push to main.
+# Dispatch this to run `mint version` in CI and open a RELEASE PR (the bump +
+# changelog + consumed .release/ intents). Merging that PR puts the new version
+# on main; tag-release.yml then cuts the v<version> tag, which drives
+# publish-jsr.yml + release.yml. No branch-protection exception is needed — CI
+# only pushes a release branch and opens a PR.
 on:
   workflow_dispatch: {}
 
 permissions:
-  contents: write # push the version-bump commit + the release tag
-
-concurrency:
-  group: cut-release
-  cancel-in-progress: false
+  contents: write # push the release branch
+  pull-requests: write # open the release PR
 
 jobs:
   cut:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
-      - name: Checkout mint
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           repository: bounded-systems/mint
           ref: v0.5.0
           path: .mint
-      - name: Setup Node
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
       - name: Install mint deps
         working-directory: .mint
         run: npm ci --no-audit --no-fund
-      - name: Git identity
+      - name: mint version → open a release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "mint"
           git config user.email "noreply@anthropic.com"
-      - name: mint version — bump + changelog + consume intents
-        id: mv
-        run: |
           out="$(node .mint/mint.mjs version)"; printf '%s\n' "$out"
           next="$(printf '%s\n' "$out" | grep -oE '→ [0-9]+\.[0-9]+\.[0-9]+' | head -1 | tr -dc '0-9.')"
           if [ -z "$next" ]; then
-            echo "released=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "released=true" >> "$GITHUB_OUTPUT"
-            echo "next=$next" >> "$GITHUB_OUTPUT"
+            echo "no intents — nothing to release"; exit 0
           fi
-      - name: Commit the bump, then mint release (cut + push the tag)
-        if: steps.mv.outputs.released == 'true'
-        run: |
+          branch="release/v${next}"
+          git switch -c "$branch"
           git add -A
-          git commit -m "chore(release): v${{ steps.mv.outputs.next }}"
-          git push origin HEAD:main
-          node .mint/mint.mjs release # cuts + pushes v<version>
+          git commit -m "release: v${next}"
+          git push -u origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "release: v${next}" \
+            --body "Cut by \`mint version\` — deterministic bump + changelog + consumed intents. Merge to put v${next} on main; \`tag-release\` then cuts the v${next} tag → publish + provenance."
