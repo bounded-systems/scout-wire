@@ -49,4 +49,8 @@ jobs:
           fi
           git config user.name "mint"
           git config user.email "noreply@anthropic.com"
+          # mint v0.5.0 reads `git config --get commit.gpgsign`, which exits 1
+          # when the key is unset (fresh CI runner) and mint throws on it. Set it
+          # explicitly so the read succeeds; the CI runner has no signing key.
+          git config commit.gpgsign false
           node .mint/mint.mjs release # cuts + pushes v<version>
