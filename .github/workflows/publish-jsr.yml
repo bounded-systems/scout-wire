@@ -2,6 +2,10 @@ name: publish-jsr
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  # Manual escape hatch: a tag pushed by the default GITHUB_TOKEN does NOT start
+  # this workflow (GitHub loop-prevention), so when tag-release cuts a tag without
+  # a RELEASE_TOKEN, dispatch this to publish the version currently on the branch.
+  workflow_dispatch: {}
 permissions:
   contents: read
   id-token: write

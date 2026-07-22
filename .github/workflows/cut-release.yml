@@ -20,6 +20,10 @@ jobs:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
+          # RELEASE_TOKEN (App/PAT) lets `gh pr create` open the PR — the default
+          # GITHUB_TOKEN is refused when the org disallows Actions-authored PRs.
+          # Falls back to GITHUB_TOKEN (branch still pushed; open the PR by hand).
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           repository: bounded-systems/mint
@@ -33,7 +37,7 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: mint version → open a release PR
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || github.token }}
         run: |
           git config user.name "mint"
           git config user.email "noreply@anthropic.com"
@@ -44,7 +48,7 @@ jobs:
           fi
           branch="release/v${next}"
           git switch -c "$branch"
-          git add -A
+          git add -A -- . ':!.mint' # never stage the mint checkout dir
           git commit -m "release: v${next}"
           git push -u origin "$branch"
           gh pr create --base main --head "$branch" \
