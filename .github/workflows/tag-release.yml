@@ -53,4 +53,7 @@ jobs:
           # when the key is unset (fresh CI runner) and mint throws on it. Set it
           # explicitly so the read succeeds; the CI runner has no signing key.
           git config commit.gpgsign false
+          # Hide the .mint checkout dir (+ its node_modules) from git so mint
+          # release's working-tree cleanliness check doesn't see it as dirty.
+          printf '/.mint/\n' >> "$(git rev-parse --git-dir)/info/exclude"
           node .mint/mint.mjs release # cuts + pushes v<version>
