@@ -46,4 +46,4 @@ schema at the cost of emptiness of the guarantee. It proves *that* an occurrence
 was distinct, never *what* it was: nameable, not verifiable. Don't let the
 id-shaped slot imply an id-shaped guarantee.
 
-Source-available under **PolyForm Noncommercial 1.0.0**.
+Open source under the [MIT License](LICENSE).
